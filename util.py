@@ -10,6 +10,7 @@ from time import sleep
 from typing import Callable, Optional, Tuple
 
 import cv2
+from picamera2 import Picamera2
 import numpy as np
 import requests
 from screeninfo import Monitor
@@ -94,34 +95,39 @@ class CameraParams:
                 np.array(data["d"]),
             )
 
-
 class VideoCapture:
-    """Implements threaded OpenCV video capture"""
+    """Implements threaded video capture using Picamera2"""
 
     def __init__(self, idx: int, res: Tuple[int, int], fps: Optional[int] = None):
-        # initialize the camera and start streaming
-        self._cap = cv2.VideoCapture(idx)
-        self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, res[0])
-        self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, res[1])
+        # initialize the camera and configure it
+        self._camera = Picamera2()
+        self._camera_config = self._camera.create_preview_configuration(
+            main={"size": res, "format": "RGB888"}
+        )
         if fps is not None:
-            self._cap.set(cv2.CAP_PROP_FPS, fps)
+            self._camera_config["main"]["framerate"] = fps
             self.fps = fps
+        
+        self._camera.configure(self._camera_config)
+        self._camera.start()
         self._frame = None
+
+        # start the update thread
         self._start()
-        atexit.register(self._cap.release)
+        atexit.register(self._camera.close)
 
     def _start(self):
         Thread(target=self._update, name="VideoCapture", daemon=True).start()
 
     def _update(self):
-        retval = True
-        while retval:
-            retval, self._frame = self._cap.read()
+        while True:
+            self._frame = self._camera.capture_array()
 
     def read(self):
         frame = self._frame
-        self._frame = None
+        self._frame = None  # Reset the frame after reading to avoid returning the same frame repeatedly
         return frame
+
 
 
 def imshow(
@@ -160,8 +166,10 @@ def show_preview(
     shown = False
     key = -1
 
+    print("cap", cap)
+
     while key == -1:
-        img = cap.read()
+        img = cap.capture_array()()
         if img is None:
             continue
 

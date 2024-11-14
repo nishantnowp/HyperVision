@@ -1,3 +1,4 @@
 opencv-python
 requests
 screeninfo
+python3-picamera2

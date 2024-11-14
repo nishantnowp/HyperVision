@@ -291,9 +291,10 @@ def calibrate(
 
 def main():
     args = parse_args()
-
+    print("Hello")
     mon = get_monitors()[args.screen_monitor]
-
+    print("mon")
+    print(mon)
     if args.hyperion_api:
         Hyperion(args.hyperion_api)
 
