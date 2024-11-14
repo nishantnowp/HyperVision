@@ -100,13 +100,14 @@ class VideoCapture:
 
     def __init__(self, idx: int, res: Tuple[int, int], fps: Optional[int] = None):
         # initialize the camera and configure it
+        print("res w:{} h:{}".format(res[0], res[1]))
         self._camera = Picamera2()
         self._camera_config = self._camera.create_preview_configuration(
-            main={"size": res, "format": "RGB888"}
+            main={"size": res, "format": "YUV420"}
         )
-        if fps is not None:
-            self._camera_config["main"]["framerate"] = fps
-            self.fps = fps
+        # if fps is not None:
+        #     self._camera_config["main"]["framerate"] = fps
+        #     self.fps = fps
         
         self._camera.configure(self._camera_config)
         self._camera.start()
@@ -162,14 +163,11 @@ def show_preview(
 
     width = round(mon.width * scale)
     x0 = round((mon.width - width) / 2)
-
     shown = False
     key = -1
 
-    print("cap", cap)
-
     while key == -1:
-        img = cap.capture_array()()
+        img = cap.read()
         if img is None:
             continue
 

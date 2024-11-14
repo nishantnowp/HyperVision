@@ -291,13 +291,10 @@ def calibrate(
 
 def main():
     args = parse_args()
-    print("Hello")
     mon = get_monitors()[args.screen_monitor]
-    print("mon")
-    print(mon)
     if args.hyperion_api:
         Hyperion(args.hyperion_api)
-
+    print("args.cam_model", args.cam_model)
     cap = VideoCapture(args.cam_index, (args.cam_res_y, args.cam_res_x), args.cam_fps)
     show_preview(cap, mon, args.screen_preview_scale, args.frame_delay_ms)
 
